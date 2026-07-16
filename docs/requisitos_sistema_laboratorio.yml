@@ -1,0 +1,436 @@
+documento:
+  titulo: "Documento de Elicitação de Requisitos"
+  sistema: "Sistema Web para Laboratório de Pesquisa"
+  versao: "1.4"
+  data: "2026-07-12"
+  historico_revisoes:
+    - versao: "1.0"
+      data: "2026-07-12"
+      alteracoes: "Versão inicial."
+    - versao: "1.1"
+      data: "2026-07-12"
+      alteracoes: >
+        Correções da validação: administrador sem acesso a artigos não públicos
+        (armazenamento criptografado); artigos sempre criados como não públicos;
+        autenticação física padronizada em FIDO2/WebAuthn; gestão do ciclo de vida
+        das chaves pelo administrador; gestão de vínculos aluno-orientador;
+        edição/exclusão de artigos; fluxo de reversão de visibilidade; máquina de
+        estados do artigo; RNFs quantificados; US04 reescrita; remoção de
+        "comentar" (RN03).
+    - versao: "1.2"
+      data: "2026-07-12"
+      alteracoes: >
+        Lógica de coautores (membros e externos) e co-orientador; carta de aceite
+        obrigatória para publicação; submissão para avaliação com evento alvo e
+        deadline, com prazo sugerido de parecer e lembretes automáticos aos
+        revisores.
+    - versao: "1.3"
+      data: "2026-07-12"
+      alteracoes: >
+        Módulo autenticado restrito a desktops/notebooks; eliminado o suporte a
+        NFC/dispositivos móveis para a chave física (uso exclusivo via USB); área
+        pública permanece responsiva.
+    - versao: "1.4"
+      data: "2026-07-12"
+      alteracoes: >
+        Autenticação forte alterada de chave física FIDO2 para o padrão WebAuthn,
+        aceitando múltiplos tipos de autenticadores (chave de segurança USB,
+        autenticador de plataforma com biometria/PIN - ex.: Windows Hello, Touch ID -
+        e passkeys); terminologia atualizada de "chave física" para "credencial
+        WebAuthn".
+
+introducao: >
+  Este documento descreve os requisitos levantados para o desenvolvimento de um sistema
+  web voltado à gestão e divulgação das publicações científicas de um laboratório de
+  pesquisa. O sistema permitirá a exibição pública das principais publicações, o cadastro
+  de novos artigos por membros autenticados (com autor principal e coautores), o fluxo de
+  avaliação de artigos submetidos por alunos a seus orientadores e co-orientadores — com
+  indicação do evento alvo e sua deadline —, a exigência de carta de aceite para
+  publicação, e um mecanismo adicional de segurança baseado em autenticação forte no
+  padrão WebAuthn - que aceita múltiplos tipos de autenticadores, como chaves de
+  segurança USB, autenticadores de plataforma com biometria/PIN (ex.: Windows Hello,
+  Touch ID) e passkeys - para qualquer interação com artigos ainda não tornados
+  públicos. O módulo autenticado do sistema é acessível
+  somente em computadores desktop/notebook, enquanto a área pública permanece acessível
+  em qualquer dispositivo. Todo artigo é criado com visibilidade "não público" e seu
+  conteúdo é armazenado de forma criptografada, inacessível inclusive ao administrador
+  do sistema.
+
+atores:
+  - id: visitante
+    nome: "Visitante"
+    descricao: "Usuário não autenticado que acessa a tela inicial do sistema."
+  - id: aluno
+    nome: "Aluno"
+    descricao: "Membro do laboratório com permissão para cadastrar artigos (como autor principal ou coautor) e submetê-los para avaliação."
+  - id: orientador
+    nome: "Orientador"
+    descricao: "Membro do laboratório responsável por avaliar e emitir parecer decisório sobre artigos submetidos por alunos."
+  - id: coorientador
+    nome: "Co-orientador"
+    descricao: "Membro com perfil de orientador, indicado na submissão como avaliador complementar. Tem acesso ao artigo e pode registrar parecer complementar (não decisório)."
+  - id: administrador
+    nome: "Administrador"
+    descricao: "Responsável pela gestão de usuários, permissões, vínculos aluno-orientador e ciclo de vida das credenciais WebAuthn. Não possui acesso ao conteúdo de artigos não públicos."
+
+historias_de_usuario:
+  - id: US01
+    ator: visitante
+    historia: "Como visitante, quero visualizar as principais publicações públicas do laboratório na tela inicial, para conhecer as pesquisas realizadas sem precisar de login."
+  - id: US02
+    ator: [aluno, orientador, coorientador, administrador]
+    historia: "Como membro do laboratório, quero fazer login no sistema, para poder incluir e gerenciar artigos."
+  - id: US03
+    ator: [aluno, orientador]
+    historia: "Como membro do laboratório (aluno ou orientador), quero cadastrar um novo artigo, que inicia obrigatoriamente como não público, para desenvolvê-lo com confidencialidade até sua publicação."
+  - id: US04
+    ator: [aluno, orientador]
+    historia: "Como autor de um artigo não público, quero que apenas eu, meus coautores membros e os orientadores vinculados tenham acesso ao seu conteúdo, para que a confidencialidade das pesquisas em andamento seja preservada."
+  - id: US05
+    ator: aluno
+    historia: "Como aluno, quero submeter um artigo para avaliação do meu orientador, informando o evento alvo e sua deadline, para obter um parecer com prazo suficiente para correções antes da submissão ao evento."
+  - id: US06
+    ator: orientador
+    historia: "Como orientador, quero visualizar os artigos submetidos pelos meus alunos, com o evento alvo e a deadline informados, e registrar um parecer (aprovado, reprovado ou com ressalvas), para orientar o andamento do trabalho em tempo hábil."
+  - id: US07
+    ator: [aluno, orientador, coorientador]
+    historia: "Como membro do laboratório, quero que o sistema exija uma autenticação forte WebAuthn (chave de segurança USB, biometria ou passkey) sempre que eu interagir com um artigo ainda não público, para garantir uma camada extra de segurança contra acessos indevidos."
+  - id: US08
+    ator: administrador
+    historia: "Como administrador, quero gerenciar os usuários, suas permissões e os vínculos aluno-orientador, para manter o controle de quem pode acessar e submeter conteúdo no sistema."
+  - id: US09
+    ator: administrador
+    historia: "Como administrador, quero gerenciar o ciclo de vida das credenciais WebAuthn (registrar, vincular, revogar e substituir), para garantir que apenas credenciais válidas autorizem o acesso a artigos não públicos."
+  - id: US10
+    ator: [aluno, orientador]
+    historia: "Como autor principal, coautor membro ou orientador vinculado, quero editar ou excluir um artigo, para manter o acervo atualizado e correto."
+  - id: US11
+    ator: [aluno, orientador]
+    historia: "Como autor principal, quero indicar coautores (membros do laboratório ou externos) no cadastro do artigo, para que os membros colaborem no sistema e os externos constem na autoria."
+  - id: US12
+    ator: aluno
+    historia: "Como aluno, quero indicar um co-orientador na submissão do artigo, para contar com uma avaliação complementar à do orientador principal."
+  - id: US13
+    ator: coorientador
+    historia: "Como co-orientador, quero visualizar o artigo submetido e registrar um parecer complementar, para apoiar a decisão do orientador principal."
+  - id: US14
+    ator: [aluno, orientador]
+    historia: "Como autor, quero anexar a carta de aceite do evento/periódico ao artigo, para habilitar sua publicação no sistema."
+
+casos_de_uso:
+  - id: UC01
+    nome: "Realizar Login"
+    ator_principal: [aluno, orientador, coorientador, administrador]
+    pre_condicoes:
+      - "Usuário possuir cadastro ativo no sistema."
+    fluxo_principal:
+      - "Usuário acessa a tela de login."
+      - "Usuário informa credenciais (usuário/senha)."
+      - "Sistema valida as credenciais."
+      - "Sistema redireciona o usuário para a área autenticada."
+    fluxos_alternativos:
+      - "Credenciais inválidas: sistema exibe mensagem de erro e permanece na tela de login."
+      - "Usuário esqueceu a senha: sistema oferece fluxo de recuperação por e-mail cadastrado."
+    pos_condicoes:
+      - "Sessão do usuário iniciada, com expiração automática por inatividade (RNF13)."
+
+  - id: UC02
+    nome: "Visualizar Publicações Públicas"
+    ator_principal: [visitante]
+    pre_condicoes:
+      - "Nenhuma."
+    fluxo_principal:
+      - "Usuário acessa a tela inicial do sistema."
+      - "Sistema lista as publicações marcadas como públicas, com metadados (incluindo autores e coautores) e download do arquivo."
+    pos_condicoes:
+      - "Publicações exibidas sem exposição de artigos não públicos."
+
+  - id: UC03
+    nome: "Cadastrar Artigo"
+    ator_principal: [aluno, orientador]
+    pre_condicoes:
+      - "Usuário autenticado."
+    fluxo_principal:
+      - "Usuário acessa a área de cadastro de artigos."
+      - "Usuário preenche os dados do artigo (título, resumo, arquivo, etc.), sendo registrado como autor principal."
+      - "Usuário indica os coautores: membros do laboratório são selecionados dentre os usuários cadastrados; coautores externos são registrados apenas como metadados de autoria (nome, instituição), sem acesso ao sistema."
+      - "Sistema salva o artigo com visibilidade 'não público' (obrigatório - RN01) e conteúdo criptografado (RNF12)."
+    regra_associada: "Todas as interações futuras com o artigo exigirão autenticação WebAuthn (ver UC05) enquanto ele for não público. Coautores membros passam a ter os acessos definidos em RN12."
+    pos_condicoes:
+      - "Artigo registrado no estado 'Rascunho (não público)', com autoria definida."
+
+  - id: UC04
+    nome: "Submeter Artigo para Avaliação"
+    ator_principal: [aluno]
+    pre_condicoes:
+      - "Aluno autenticado."
+      - "Artigo cadastrado; aluno é o autor principal."
+      - "Existe vínculo aluno-orientador ativo (UC08)."
+    fluxo_principal:
+      - "Aluno seleciona o artigo a ser submetido."
+      - "Aluno indica o orientador responsável (dentre os vinculados a ele) e, opcionalmente, um co-orientador (membro com perfil de orientador)."
+      - "Aluno informa o evento alvo (nome do evento/periódico) e a deadline de submissão do evento (obrigatórios)."
+      - "Sistema valida que a deadline é futura e calcula o prazo sugerido de parecer (deadline menos a margem mínima para correções - RN15)."
+      - "Sistema solicita a autenticação WebAuthn (UC05)."
+      - "Sistema notifica o orientador e o co-orientador (se indicado) sobre a nova submissão, exibindo evento alvo, deadline e prazo sugerido de parecer (e-mail e notificação no sistema)."
+    fluxos_alternativos:
+      - "Deadline informada anterior ou igual à data atual: sistema rejeita a submissão e solicita correção."
+      - "Deadline mais próxima que a margem mínima de correções: sistema alerta o aluno e os revisores sobre o prazo crítico, mas permite a submissão."
+    pos_condicoes:
+      - "Artigo no estado 'Aguardando parecer', com evento alvo, deadline e prazo sugerido registrados."
+
+  - id: UC05
+    nome: "Autenticar com WebAuthn"
+    ator_principal: [aluno, orientador, coorientador]
+    pre_condicoes:
+      - "Usuário autenticado no sistema."
+      - "Credencial WebAuthn registrada e vinculada ao usuário (UC09)."
+      - "Tentativa de interação com artigo não público (visualizar, editar, excluir, avaliar, submeter, alterar visibilidade)."
+    fluxo_principal:
+      - "Sistema detecta interação com artigo não público."
+      - "Sistema inicia desafio WebAuthn e solicita um autenticador registrado do usuário (chave de segurança USB, autenticador de plataforma com biometria/PIN ou passkey)."
+      - "Usuário utiliza o autenticador e realiza a verificação de presença/usuário (toque, biometria ou PIN)."
+      - "Sistema valida a assinatura criptográfica da credencial."
+      - "Sistema libera a ação solicitada."
+    fluxos_alternativos:
+      - "Credencial inválida, ausente, revogada ou não reconhecida: sistema bloqueia a ação e registra a tentativa em log de auditoria; após 5 falhas consecutivas, bloqueio temporário do usuário por 15 minutos (RN08)."
+    pos_condicoes:
+      - "Ação sobre o artigo autorizada ou bloqueada."
+
+  - id: UC06
+    nome: "Emitir Parecer sobre Artigo"
+    ator_principal: [orientador, coorientador]
+    pre_condicoes:
+      - "Revisor autenticado."
+      - "Artigo submetido com o revisor designado (orientador ou co-orientador)."
+      - "Autenticação WebAuthn validada (UC05)."
+    fluxo_principal:
+      - "Revisor acessa o artigo submetido; sistema exibe evento alvo, deadline do evento e prazo sugerido de parecer."
+      - "Revisor analisa o conteúdo."
+      - "Co-orientador (se designado) registra parecer complementar e comentários, visível ao orientador principal e ao aluno."
+      - "Orientador principal registra o parecer decisório (aprovado, reprovado, com ressalvas) e comentários, podendo considerar o parecer complementar."
+      - "Sistema notifica o aluno sobre cada parecer emitido (e-mail e notificação no sistema)."
+    fluxos_alternativos:
+      - "Aproximação do prazo sugerido de parecer sem emissão: sistema envia lembretes automáticos aos revisores (RF22)."
+      - "Parecer decisório emitido antes do complementar: parecer complementar torna-se opcional e não bloqueia o fluxo."
+    pos_condicoes:
+      - "Artigo no estado 'Avaliado' após o parecer decisório do orientador principal."
+
+  - id: UC07
+    nome: "Alterar Visibilidade do Artigo"
+    ator_principal: [aluno, orientador]
+    pre_condicoes:
+      - "Usuário autenticado."
+      - "Usuário autor principal ou orientador vinculado do artigo."
+      - "Autenticação WebAuthn validada, caso o artigo esteja não público."
+    fluxo_principal_tornar_publico:
+      - "Usuário acessa as configurações do artigo."
+      - "Sistema verifica as condições de publicação (RN06): parecer 'aprovado' do orientador principal (para artigos de aluno) e carta de aceite do evento/periódico anexada (RN14)."
+      - "Caso ainda não anexada, usuário realiza o upload da carta de aceite (UC11)."
+      - "Usuário confirma a publicação."
+      - "Sistema atualiza o status para 'Público' e disponibiliza o conteúdo na área pública."
+    fluxo_alternativo_reverter_para_nao_publico:
+      - "Aluno solicita a reversão, informando justificativa."
+      - "Sistema notifica o orientador vinculado."
+      - "Orientador aprova ou rejeita a solicitação (a reversão direta pelo orientador em artigos próprios não exige aprovação)."
+      - "Se aprovada, sistema retorna o artigo ao estado não público e restabelece a criptografia do conteúdo."
+    pos_condicoes:
+      - "Artigo passa a seguir as regras de exibição do novo status."
+
+  - id: UC08
+    nome: "Gerenciar Usuários, Permissões e Vínculos"
+    ator_principal: [administrador]
+    pre_condicoes:
+      - "Administrador autenticado."
+    fluxo_principal:
+      - "Administrador acessa o painel de gestão de usuários."
+      - "Administrador cria, edita, ativa/desativa ou remove usuários e define perfis (aluno, orientador, administrador)."
+      - "Administrador cria e mantém os vínculos aluno-orientador que habilitam o fluxo de submissão (UC04)."
+    pos_condicoes:
+      - "Cadastro de usuários e vínculos atualizados."
+
+  - id: UC09
+    nome: "Gerenciar Ciclo de Vida das Credenciais WebAuthn"
+    ator_principal: [administrador]
+    pre_condicoes:
+      - "Administrador autenticado."
+    fluxo_principal:
+      - "Administrador acessa o painel de gestão de credenciais."
+      - "Administrador registra uma nova credencial WebAuthn para um usuário (registro presencial), vinculando-a a um único usuário - o autenticador pode ser chave de segurança USB, autenticador de plataforma (biometria/PIN) ou passkey."
+      - "Administrador consulta o status das credenciais ativas."
+    fluxos_alternativos:
+      - "Perda/roubo do autenticador ou desligamento do membro: administrador revoga a credencial imediatamente; acessos com a credencial revogada passam a ser bloqueados e registrados em auditoria; administrador registra credencial substituta quando aplicável."
+    pos_condicoes:
+      - "Base de credenciais atualizada; apenas credenciais válidas autorizam interações com artigos não públicos."
+    observacao: "A gestão das credenciais não concede ao administrador acesso ao conteúdo dos artigos não públicos (RN10)."
+
+  - id: UC10
+    nome: "Editar ou Excluir Artigo"
+    ator_principal: [aluno, orientador]
+    pre_condicoes:
+      - "Usuário autenticado."
+      - "Usuário autor principal, coautor membro ou orientador vinculado."
+      - "Autenticação WebAuthn validada, caso o artigo esteja não público."
+    fluxo_principal:
+      - "Usuário acessa o artigo."
+      - "Usuário edita os dados/arquivo do artigo ou, sendo autor principal ou orientador vinculado, solicita sua exclusão."
+      - "Sistema salva as alterações ou realiza a exclusão lógica, registrando a ação e o usuário responsável em auditoria."
+    restricoes:
+      - "Artigos no estado 'Aguardando parecer' não podem ser editados até a emissão do parecer decisório."
+      - "A exclusão é restrita ao autor principal e ao orientador vinculado (coautores membros apenas editam - RN12)."
+    pos_condicoes:
+      - "Artigo atualizado ou excluído (exclusão lógica com registro)."
+
+  - id: UC11
+    nome: "Anexar Carta de Aceite"
+    ator_principal: [aluno, orientador]
+    pre_condicoes:
+      - "Usuário autenticado."
+      - "Usuário autor principal ou orientador autor do artigo."
+      - "Artigo no estado 'Avaliado (aprovado)' ou, para artigos de orientador sem submissão, 'Rascunho'."
+      - "Autenticação WebAuthn validada, caso o artigo esteja não público."
+    fluxo_principal:
+      - "Usuário acessa a área de documentos do artigo."
+      - "Usuário realiza o upload da carta de aceite do evento/periódico (ex.: PDF), informando o evento correspondente."
+      - "Sistema valida o formato do arquivo, armazena a carta vinculada ao artigo e registra a ação em auditoria."
+    fluxos_alternativos:
+      - "Arquivo em formato inválido: sistema rejeita e solicita novo upload."
+    pos_condicoes:
+      - "Carta de aceite anexada; condição documental para publicação (RN14) satisfeita."
+
+estados_do_artigo:
+  - estado: "Rascunho (não público)"
+    descricao: "Estado inicial de todo artigo (RN01)."
+    transicoes: ["Aguardando parecer (UC04)", "Excluído (UC10)"]
+  - estado: "Aguardando parecer"
+    descricao: "Submetido ao orientador (e co-orientador, se indicado), com evento alvo e deadline registrados."
+    transicoes: ["Avaliado (UC06, parecer decisório)"]
+  - estado: "Avaliado"
+    descricao: "Parecer decisório emitido: aprovado, reprovado ou com ressalvas."
+    transicoes: ["Público (UC07, se aprovado e com carta de aceite anexada - UC11)", "Rascunho (novo ciclo de edição/submissão, se reprovado ou com ressalvas)"]
+  - estado: "Público"
+    descricao: "Visível na área pública."
+    transicoes: ["Rascunho (não público), mediante fluxo de reversão aprovado (UC07/RN07)"]
+  - estado: "Excluído"
+    descricao: "Exclusão lógica, mantida para auditoria."
+    transicoes: []
+
+requisitos_funcionais:
+  - id: RF01
+    descricao: "O sistema deve exibir na tela inicial as principais publicações marcadas como públicas, sem exigir login."
+  - id: RF02
+    descricao: "O sistema deve permitir que membros do laboratório realizem login com usuário e senha, com fluxo de recuperação de senha por e-mail."
+  - id: RF03
+    descricao: "O sistema deve permitir que alunos e orientadores autenticados cadastrem novos artigos, sendo registrados como autor principal."
+  - id: RF04
+    descricao: "Todo artigo deve ser criado obrigatoriamente com visibilidade 'não público'; a publicação ocorre posteriormente, conforme RN06 e RN14 (UC07)."
+  - id: RF05
+    descricao: "O sistema não deve exibir artigos não públicos a usuários não autorizados, incluindo visitantes, membros sem permissão sobre o artigo e administradores."
+  - id: RF06
+    descricao: "O sistema deve permitir que o aluno (autor principal) submeta um artigo para avaliação de um orientador vinculado a ele, com indicação opcional de um co-orientador."
+  - id: RF07
+    descricao: "O sistema deve permitir que o orientador principal registre o parecer decisório (aprovado, reprovado ou com ressalvas) e que o co-orientador registre parecer complementar sobre o artigo submetido."
+  - id: RF08
+    descricao: "O sistema deve notificar o aluno (e-mail e notificação no sistema) quando qualquer parecer (decisório ou complementar) for emitido."
+  - id: RF09
+    descricao: "O sistema deve exigir a validação de autenticação forte no padrão WebAuthn (chave de segurança USB, autenticador de plataforma com biometria/PIN ou passkey) sempre que houver qualquer interação (visualização, edição, exclusão, submissão, avaliação, alteração de visibilidade) com um artigo não público."
+  - id: RF10
+    descricao: "O sistema deve bloquear a ação solicitada caso a autenticação WebAuthn não seja validada com sucesso."
+  - id: RF11
+    descricao: "O sistema deve registrar em log de auditoria todas as tentativas de acesso a artigos não públicos, incluindo tentativas de autenticação WebAuthn falhas."
+  - id: RF12
+    descricao: "O sistema deve permitir que administradores gerenciem usuários, seus perfis de acesso (aluno, orientador, administrador) e os vínculos aluno-orientador."
+  - id: RF13
+    descricao: "O sistema deve permitir a alteração da visibilidade de um artigo já cadastrado, respeitando as regras de autenticação WebAuthn e as condições de publicação/reversão (RN06, RN07, RN14)."
+  - id: RF14
+    descricao: "O sistema deve permitir upload de arquivos de artigos (ex.: PDF) associados ao registro do artigo, com download disponível na área pública para artigos públicos."
+  - id: RF15
+    descricao: "O sistema deve armazenar o conteúdo de artigos não públicos de forma criptografada em repouso, de modo que nem mesmo o administrador do sistema tenha acesso ao conteúdo."
+  - id: RF16
+    descricao: "O sistema deve permitir que o administrador gerencie o ciclo de vida das credenciais WebAuthn: registro, vínculo a um único usuário, consulta de status, revogação imediata (perda/roubo/desligamento) e substituição."
+  - id: RF17
+    descricao: "O sistema deve permitir que autores (principal e coautores membros) e orientadores vinculados editem artigos, e que autor principal e orientador vinculado os excluam (exclusão lógica), respeitando as regras de autenticação WebAuthn e o estado do artigo."
+  - id: RF18
+    descricao: "O sistema deve implementar o fluxo de aprovação para reversão de artigo público para não público: solicitação do aluno com justificativa, notificação e decisão do orientador (ou administrador, na ausência do orientador)."
+  - id: RF19
+    descricao: "O sistema deve permitir o registro de coautores no cadastro do artigo: membros do laboratório selecionados dentre os usuários cadastrados (com os acessos de RN12) e coautores externos como metadados de autoria (nome, instituição), sem acesso ao sistema."
+  - id: RF20
+    descricao: "O sistema deve permitir a indicação de um co-orientador na submissão, notificando orientador e co-orientador e concedendo ao co-orientador acesso ao artigo para parecer complementar."
+  - id: RF21
+    descricao: "O sistema deve exigir, na submissão para avaliação, o registro do evento alvo (nome do evento/periódico) e da deadline de submissão do evento, validando que a deadline é futura e exibindo essas informações aos revisores."
+  - id: RF22
+    descricao: "O sistema deve calcular o prazo sugerido de parecer (deadline do evento menos a margem mínima para correções - RN15) e enviar lembretes automáticos aos revisores conforme a aproximação desse prazo."
+  - id: RF23
+    descricao: "O sistema deve permitir o upload da carta de aceite do evento/periódico vinculada ao artigo (UC11) e bloquear a publicação de artigos sem carta de aceite anexada (RN14)."
+
+requisitos_nao_funcionais:
+  - id: RNF01
+    descricao: "A área pública do sistema deve ser acessível via navegador web, com layout responsivo para desktop e dispositivos móveis. O módulo autenticado deve ser acessível somente em computadores desktop/notebook, com bloqueio de acesso a partir de dispositivos móveis."
+  - id: RNF02
+    descricao: "Toda comunicação entre cliente e servidor deve ser criptografada (HTTPS/TLS 1.2+)."
+  - id: RNF03
+    descricao: "As senhas dos usuários devem ser armazenadas de forma segura (hash com salt, algoritmo dedicado - ex.: bcrypt/argon2)."
+  - id: RNF04
+    descricao: "A autenticação forte deve utilizar o padrão WebAuthn, aceitando múltiplos tipos de autenticadores (chave de segurança USB, autenticador de plataforma com biometria/PIN - ex.: Windows Hello, Touch ID - e passkeys), baseada em assinatura criptográfica de desafio com verificação de presença/usuário."
+  - id: RNF05
+    descricao: "O sistema deve manter logs de auditoria imutáveis por, no mínimo, 12 meses."
+  - id: RNF06
+    descricao: "O tempo de resposta para exibição da tela inicial com publicações públicas deve ser inferior a 3 segundos (percentil 95) com até 100 usuários simultâneos."
+  - id: RNF07
+    descricao: "O sistema deve suportar ao menos 100 usuários simultâneos mantendo tempo de resposta inferior a 3 segundos (percentil 95) nas operações comuns."
+  - id: RNF08
+    descricao: "O sistema deve estar disponível (uptime) em, no mínimo, 99% do tempo mensal."
+  - id: RNF09
+    descricao: "O sistema deve atender à WCAG 2.1 nível AA na interface pública."
+  - id: RNF10
+    descricao: "O código-fonte e a arquitetura devem permitir manutenção e evolução (modularidade, documentação técnica)."
+  - id: RNF11
+    descricao: "O sistema deve estar em conformidade com legislação de proteção de dados aplicável (ex.: LGPD)."
+  - id: RNF12
+    descricao: "O conteúdo de artigos não públicos deve ser criptografado em repouso com algoritmo forte (ex.: AES-256), com gestão de chaves de criptografia que impeça o acesso ao conteúdo por administradores do sistema."
+  - id: RNF13
+    descricao: "Sessões autenticadas devem expirar automaticamente após período de inatividade (ex.: 30 minutos), exigindo novo login."
+
+restricoes:
+  - id: RE01
+    descricao: "A autenticação forte deve utilizar autenticadores compatíveis com o padrão WebAuthn e com os navegadores e sistemas operacionais utilizados pelo laboratório."
+  - id: RE02
+    descricao: "O sistema deve ser desenvolvido dentro do orçamento e prazo definidos pelo laboratório (a definir - pendência registrada)."
+  - id: RE03
+    descricao: "O sistema deve ser compatível com os principais navegadores web (Chrome, Firefox, Edge, Safari) em suas versões atualizadas, todos com suporte nativo a WebAuthn."
+  - id: RE04
+    descricao: "A infraestrutura de hospedagem deve atender às políticas de segurança da instituição à qual o laboratório está vinculado."
+  - id: RE05
+    descricao: "O módulo autenticado é acessível somente em computadores desktop/notebook; a autenticação WebAuthn utiliza os autenticadores suportados pelo navegador e sistema operacional da estação (chave USB, biometria/autenticador de plataforma ou passkey). A área pública permanece acessível em qualquer dispositivo."
+
+regras_de_negocio:
+  - id: RN01
+    descricao: "Todo artigo é criado obrigatoriamente com visibilidade 'não público'. Não é permitido cadastrar um artigo diretamente como público."
+  - id: RN02
+    descricao: "Artigos 'não públicos' só podem ser acessados pelo autor principal, coautores membros do laboratório, orientador vinculado e co-orientador designado. Administradores não têm acesso ao conteúdo de artigos não públicos."
+  - id: RN03
+    descricao: "Qualquer interação (visualizar, editar, excluir, avaliar, submeter, alterar visibilidade) com um artigo 'não público' exige a validação prévia de autenticação WebAuthn."
+  - id: RN04
+    descricao: "A submissão de um artigo para avaliação só pode ser feita pelo aluno autor principal e direcionada a um orientador vinculado a ele (vínculo mantido pelo administrador - UC08), com indicação opcional de co-orientador."
+  - id: RN05
+    descricao: "Somente o orientador principal designado pode emitir o parecer decisório sobre o artigo submetido; o co-orientador emite apenas parecer complementar."
+  - id: RN06
+    descricao: "Um artigo de aluno só pode ser tornado público após receber parecer decisório 'aprovado' do orientador principal. Artigos de autoria do próprio orientador dispensam parecer, mas não a carta de aceite (RN14)."
+  - id: RN07
+    descricao: "A reversão de um artigo de 'público' para 'não público' solicitada pelo aluno exige aprovação do orientador vinculado (ou do administrador, na ausência deste); o orientador pode reverter diretamente artigos de sua própria autoria."
+  - id: RN08
+    descricao: "Tentativas de acesso não autorizado ou falhas na autenticação WebAuthn devem ser registradas; após 5 tentativas consecutivas falhas, o usuário é bloqueado temporariamente por 15 minutos."
+  - id: RN09
+    descricao: "Cada usuário do sistema deve possuir um único perfil de acesso ativo por vez (aluno, orientador ou administrador), podendo o administrador alterar esse perfil quando necessário."
+  - id: RN10
+    descricao: "A gestão do ciclo de vida das credenciais WebAuthn é responsabilidade exclusiva do administrador e não lhe concede acesso ao conteúdo de artigos não públicos."
+  - id: RN11
+    descricao: "Cada credencial WebAuthn deve estar vinculada a um único usuário. Em caso de perda/roubo do autenticador ou desligamento do membro, a credencial deve ser revogada imediatamente pelo administrador; uma credencial substituta pode ser registrada e vinculada."
+  - id: RN12
+    descricao: "Coautores membros do laboratório podem visualizar e editar o artigo (mediante autenticação WebAuthn, quando não público), mas não podem submetê-lo, excluí-lo ou alterar sua visibilidade - ações restritas ao autor principal (e, quando aplicável, ao orientador vinculado). Coautores externos não têm acesso ao sistema."
+  - id: RN13
+    descricao: "O parecer complementar do co-orientador é opcional e não bloqueia o fluxo de avaliação; a decisão sobre o artigo é sempre do parecer decisório do orientador principal."
+  - id: RN14
+    descricao: "A publicação de um artigo (transição para 'público') exige carta de aceite do evento/periódico anexada ao artigo, além das condições de parecer (RN06)."
+  - id: RN15
+    descricao: "O prazo sugerido de parecer é a deadline do evento menos a margem mínima para correções (parâmetro do sistema; padrão: 7 dias). O sistema deve alertar aluno e revisores quando a submissão ocorrer com prazo inferior à margem e enviar lembretes automáticos aos revisores conforme a aproximação do prazo."
