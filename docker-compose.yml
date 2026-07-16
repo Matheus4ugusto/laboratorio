@@ -58,7 +58,7 @@ services:
   # ---------------------------------------------------------------------------
   backend:
     build:
-      context: ./backend/demo
+      context: backend/lab
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
