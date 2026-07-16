@@ -1,5 +1,8 @@
 infra/nginx/certs/
 
+# segredos do docker-compose (raiz) — nunca versionar
+.env
+
 # dependencies
 frontend/node_modules
 frontend/.pnp

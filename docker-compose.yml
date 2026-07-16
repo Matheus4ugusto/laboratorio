@@ -28,7 +28,9 @@ services:
     networks:
       - edge
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:80/healthz"]
+      # 127.0.0.1 (não "localhost"): dentro do container localhost resolve para
+      # ::1 (IPv6) primeiro, e o nginx só escuta em IPv4 -> daria connection refused.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/healthz"]
       interval: 15s
       timeout: 5s
       retries: 5
