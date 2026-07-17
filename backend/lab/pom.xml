@@ -90,20 +90,17 @@
 			<scope>compile</scope>
 		</dependency>
 
-		<!-- Source: https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
+		<!-- Auto-configuração do Flyway (no Spring Boot 4 vive em módulo próprio).
+		     Versões do flyway-core/postgresql gerenciadas pelo BOM do Boot. -->
 		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
-			<version>12.10.0</version>
-			<scope>compile</scope>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-flyway</artifactId>
 		</dependency>
 
 		<!-- Source: https://mvnrepository.com/artifact/org.flywaydb/flyway-database-postgresql -->
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
-			<version>12.10.0</version>
-			<scope>compile</scope>
 		</dependency>
 
 		<!-- Source: https://mvnrepository.com/artifact/com.webauthn4j/webauthn4j-core -->

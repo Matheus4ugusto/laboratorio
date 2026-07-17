@@ -65,8 +65,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       # PostgreSQL (ADR-004) — Flyway roda na inicialização
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_USERNAME: lab_app
+      SPRING_DATASOURCE_PASSWORD: ${LAB_APP_PASSWORD}
       # Vault (ADR-007) — KEK no engine Transit
       SPRING_CLOUD_VAULT_URI: http://vault:8200
       SPRING_CLOUD_VAULT_TOKEN: ${VAULT_TOKEN}
@@ -80,6 +80,10 @@ services:
       # SMTP institucional (RF08/RF22) — ajuste conforme o ambiente
       SPRING_MAIL_HOST: ${SMTP_HOST}
       SPRING_MAIL_PORT: ${SMTP_PORT}
+      SPRING_FLYWAY_USER: ${POSTGRES_USER}
+      SPRING_FLYWAY_PASSWORD: ${POSTGRES_PASSWORD}
+      # Tabelas de sessão criadas pelo Flyway (lab_app não tem CREATE no schema)
+      SPRING_SESSION_JDBC_INITIALIZE_SCHEMA: never
     depends_on:
       postgres:
         condition: service_healthy
@@ -108,8 +112,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      LAB_APP_PASSWORD: ${LAB_APP_PASSWORD}
     volumes:
       - pg_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
     networks:
       - internal
     healthcheck:
