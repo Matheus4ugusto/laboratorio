@@ -17,22 +17,71 @@ Sistema de gestão e divulgação de publicações científicas de um laboratór
 
 ## Como rodar (desenvolvimento)
 
-Pré-requisitos: Docker Desktop (com Compose v2).
+Passo-a-passo de subida a partir de um clone limpo. Pré-requisitos: **Docker Desktop** (com Compose v2) e **OpenSSL** (para gerar o certificado de dev).
+
+### 1. Variáveis de ambiente
 
 ```sh
-# 1. Configure as variáveis de ambiente
-cp .env.example .env   # ajuste as senhas
-
-# 2. Suba tudo
-docker compose up -d
-
-# 3. Acompanhe até os serviços ficarem healthy
-docker compose ps
+cp .env.example .env
 ```
 
-Acesso: **https://localhost** (certificado autoassinado em dev — o navegador vai alertar). O Nginx é o único serviço com portas publicadas; ele roteia `/` para o frontend e `/api` para o backend. Postgres, MinIO e Vault ficam em rede interna isolada.
+Edite o `.env` e troque **todas** as senhas (`POSTGRES_PASSWORD`, `LAB_APP_PASSWORD`, `MINIO_ROOT_PASSWORD`) e o `VAULT_TOKEN`. Ajuste `SMTP_HOST`/`SMTP_PORT` conforme o ambiente. O `.env` é ignorado pelo Git — nunca versione o arquivo real.
 
-As migrations Flyway rodam automaticamente na subida do backend.
+> `POSTGRES_USER` **não** pode se chamar `lab_app`: esse nome é reservado para o role de runtime da aplicação (ver [Banco de dados](#banco-de-dados)).
+
+### 2. Certificado TLS de desenvolvimento
+
+O diretório `infra/nginx/certs/` está no `.gitignore`, então um clone novo **não** vem com o certificado. Sem ele o Nginx não sobe. Gere um par autoassinado:
+
+```sh
+mkdir -p infra/nginx/certs
+openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
+  -keyout infra/nginx/certs/server.key \
+  -out infra/nginx/certs/server.crt \
+  -subj "/CN=localhost"
+```
+
+Em produção esse par é substituído por certificados TLS reais.
+
+### 3. (Opcional) Expor Postgres e MinIO no host
+
+O `docker-compose.override.yml` (também ignorado pelo Git) publica o Postgres em `127.0.0.1:5432` (para DBeaver/psql) e o console do MinIO em `127.0.0.1:9001`. É carregado automaticamente pelo `docker compose` quando presente. Pule este passo se não precisar acessar esses serviços direto do host — eles continuam acessíveis pela rede interna dos containers.
+
+### 4. Subir a stack
+
+```sh
+docker compose up -d --build
+```
+
+Na primeira subida, além dos serviços principais, rodam dois containers one-shot que finalizam sozinhos (`Exited (0)`):
+
+- **`minio-init`** — cria o bucket `${MINIO_BUCKET}`.
+- **`vault-init`** — habilita o engine Transit e cria a KEK `${VAULT_KEK_NAME}`.
+
+As migrations Flyway rodam automaticamente na inicialização do backend.
+
+### 5. Verificar
+
+```sh
+docker compose ps        # aguarde postgres/minio/vault/backend/nginx "healthy"
+docker compose logs -f backend   # opcional: acompanhar migrations e boot do Spring
+```
+
+O backend tem `start_period` de 60s no healthcheck; a primeira subida (build do jar + migrations) pode levar alguns minutos. O Nginx só fica `healthy` depois que o backend passa a responder.
+
+### 6. Acessar
+
+- **App:** https://localhost — certificado autoassinado em dev, o navegador vai alertar (aceite a exceção).
+- **Console do MinIO** (só com o override do passo 3): http://localhost:9001 — login com `MINIO_ROOT_USER`/`MINIO_ROOT_PASSWORD` do `.env`.
+
+O Nginx é o **único** serviço com portas publicadas (443/80; a 80 apenas redireciona para 443); ele roteia `/` para o frontend e `/api` para o backend. Postgres, MinIO e Vault ficam em rede interna isolada.
+
+### Parar e recomeçar
+
+```sh
+docker compose down          # para os containers, preserva os volumes (dados)
+docker compose down -v       # para e APAGA os volumes (banco, MinIO) — reinício limpo
+```
 
 ## Banco de dados
 
